@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoImpact Tracker — Premium Sustainability Platform</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background glow elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Navigation Header -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-leaf text-glow"></i>
+            <span>EcoImpact <span class="accent">Tracker</span></span>
+        </div>
+        <div class="api-status">
+            <span class="pulse-indicator disconnected" id="apiIndicator"></span>
+            <span id="apiStatusText">Local Agent API: Offline</span>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="container">
+        <!-- Grid Left: Inputs and Setup -->
+        <section class="left-panel">
+            <div class="card p-6 border-glow">
+                <h2><i class="fa-solid fa-sliders text-accent"></i> Input Consumption Logs</h2>
+                <p class="subtitle">Enter your logs below or sync them through our agent interface.</p>
+                
+                <!-- Category Inputs -->
+                <div class="input-group">
+                    <div class="input-header">
+                        <span><i class="fa-solid fa-plug text-energy"></i> Electricity Usage</span>
+                        <span class="value-display" id="electricityVal">250 kWh</span>
+                    </div>
+                    <input type="range" id="electricity" min="0" max="1000" value="250" class="slider">
+                </div>
+
+                <div class="input-group">
+                    <div class="input-header">
+                        <span><i class="fa-solid fa-plane text-transport"></i> Flight Distance</span>
+                        <span class="value-display" id="flightsVal">3400 miles</span>
+                    </div>
+                    <input type="range" id="flights" min="0" max="10000" value="3400" class="slider">
+                </div>
+
+                <div class="input-group">
+                    <div class="input-header">
+                        <span><i class="fa-solid fa-drumstick-bite text-diet"></i> Meat Consumption</span>
+                        <span class="value-display" id="meatVal">5 kg</span>
+                    </div>
+                    <input type="range" id="meat" min="0" max="50" value="5" class="slider">
+                </div>
+
+                <div class="input-group">
+                    <div class="input-header">
+                        <span><i class="fa-solid fa-carrot text-diet"></i> Veggies & Fruits</span>
+                        <span class="value-display" id="veggiesVal">10 kg</span>
+                    </div>
+                    <input type="range" id="veggies" min="0" max="100" value="10" class="slider">
+                </div>
+
+                <!-- Simulation Trigger -->
+                <div class="flex flex-col gap-4 mt-6">
+                    <button class="btn btn-primary" id="runSimulationBtn">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Log with AI
+                    </button>
+                    <div class="flex gap-2">
+                        <input type="text" id="emailInput" placeholder="test.user@gmail.com (PII test)" value="test.user@gmail.com" class="text-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration / Agent Setup -->
+            <div class="card p-6 mt-6">
+                <h3><i class="fa-solid fa-server text-accent"></i> ADK Agent Connection</h3>
+                <div class="api-config">
+                    <input type="text" id="apiEndpoint" value="http://127.0.0.1:18081" class="text-input" placeholder="http://127.0.0.1:18081">
+                    <button class="btn btn-secondary" id="testConnectionBtn">Connect</button>
+                </div>
+                <small class="hint-text mt-2 block">If the ADK Playground server is running locally on port 18081, we'll stream logs directly from it.</small>
+            </div>
+        </section>
+
+        <!-- Grid Right: Output Dashboard & Interactive Agent Loop -->
+        <section class="right-panel">
+            <!-- Impact Dashboard -->
+            <div class="dashboard-grid">
+                <div class="card p-6 flex items-center justify-between">
+                    <div>
+                        <span class="stats-label">Total Footprint</span>
+                        <h1 class="stats-value" id="totalFootprint">0.0 <span class="unit">kg CO2</span></h1>
+                    </div>
+                    <div class="progress-ring-container">
+                        <svg class="progress-ring" width="100" height="100">
+                            <circle class="progress-ring-circle-bg" stroke="#1f293d" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                            <circle class="progress-ring-circle" id="progressRing" stroke="#00e676" stroke-width="8" fill="transparent" r="40" cx="50" cy="50"/>
+                        </svg>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
+
+                <div class="card p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="stats-label">Tree Offset Needed</span>
+                        <h2 class="stats-value text-accent" id="offsetTrees">0 <span class="unit">trees / year</span></h2>
+                    </div>
+                    <p class="hint-text">Based on average annual absorption of 22 kg CO2 per mature tree.</p>
+                </div>
+            </div>
+
+            <!-- Visualization Charts -->
+            <div class="card p-6 mt-6">
+                <h3><i class="fa-solid fa-chart-pie text-accent"></i> Footprint Breakdown</h3>
+                <div class="chart-container">
+                    <div class="bar-chart" id="barChart">
+                        <!-- Bars dynamically rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-Agent Flow Monitor -->
+            <div class="card p-6 mt-6 border-glow" id="agentTerminal">
+                <div class="terminal-header">
+                    <h3><i class="fa-solid fa-terminal text-accent"></i> Multi-Agent Flow Monitor</h3>
+                    <span class="terminal-status" id="flowStatus">Idle</span>
+                </div>
+                
+                <!-- Timeline Steps -->
+                <div class="timeline mt-6">
+                    <div class="timeline-step" id="stepSecurity">
+                        <div class="step-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="step-content">
+                            <h4>Security Checkpoint</h4>
+                            <p class="step-desc">Auditing input log for prompt injection & scrubbing PII...</p>
+                            <div class="step-log" id="logSecurity"></div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step" id="stepAnalyst">
+                        <div class="step-icon"><i class="fa-solid fa-calculator"></i></div>
+                        <div class="step-content">
+                            <h4>Carbon Footprint Analyst</h4>
+                            <p class="step-desc">Calculating precise carbon offsets using MCP emissions factors...</p>
+                            <div class="step-log" id="logAnalyst"></div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step" id="stepAdvisor">
+                        <div class="step-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                        <div class="step-content">
+                            <h4>Green Living Advisor</h4>
+                            <p class="step-desc">Querying local green swaps and offsetting alternatives...</p>
+                            <div class="step-log" id="logAdvisor"></div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step" id="stepApproval">
+                        <div class="step-icon"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="step-content">
+                            <h4>Human-in-the-Loop Check</h4>
+                            <p class="step-desc">Awaiting approval of action plan...</p>
+                            <div class="step-log" id="logApproval"></div>
+                            <div class="approval-actions hidden" id="approvalActions">
+                                <button class="btn btn-primary btn-sm" id="btnApprove"><i class="fa-solid fa-check"></i> Approve Plan</button>
+                                <button class="btn btn-secondary btn-sm" id="btnRevise"><i class="fa-solid fa-rotate-left"></i> Revise Input</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 EcoImpact Tracker. Built with Google ADK 2.0 Multi-Agent Framework.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
