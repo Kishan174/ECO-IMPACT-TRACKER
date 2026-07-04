@@ -19,6 +19,48 @@ As global carbon levels reach new milestones, individual tracking has become inc
 
 ---
 
+## 📐 Solution Architecture
+
+EcoImpact Tracker uses a stateful, event-driven multi-agent graph architecture. By dividing the system into distinct nodes, we isolate the concerns of parsing, mathematical analysis, advice lookup, and compliance auditing:
+1. **User Request / Webhook Entry**: Standard structured or unstructured log messages enter the pipeline.
+2. **Security Checkpoint (Pre-processing)**: Acts as an input gatekeeper. It processes variables and performs checks before triggering the LLM, neutralizing risks early.
+3. **Eco Orchestrator (Workforce Router)**: Acts as the parent agent. It maintains the global session state and delegates analytical queries to child agents sequentially, collecting their structured feedback into a shared session context.
+4. **Footprint Analyst**: A specialized child agent linked to the MCP Server's emissions database.
+5. **Green Living Advisor**: A specialized child agent linked to the MCP alternatives and offsets database.
+6. **Approval Interruption Gate**: Halts processing, waiting for explicit user interaction before logging a completed session.
+
+---
+
+## 🔒 Security Design & Hardening
+
+Security was designed from the ground up to prevent data leaks, prompt injection, and application abuse:
+- **PII Scrubbing**: Regex filters run pre-execution to identify patterns matching email addresses and phone numbers. These are instantly replaced with placeholder markers (e.g. `[EMAIL_REDACTED]`), preventing LLM exposure to user secrets.
+- **Prompt Injection Defense**: The checkpoint checks for instructions override phrases (like *"ignore previous instruction"* or *"system bypass"*). If flagged, it bypasses the agent chain entirely, triggers a security breach handler node, and terminates the session with an error payload.
+- **Abuse Prevention Rules**: Limits payload string inputs to under 50k characters to prevent overflow and validates that there are no massive numeric digits to avoid memory consumption issues.
+- **Structured Audit Trail**: Outputs compliance JSON audit records for every request to standard output:
+  ```json
+  {"timestamp": "2026-07-04T22:33:22Z", "node": "security_checkpoint", "severity": "INFO", "details": "PII scrubbed. Input validated."}
+  ```
+
+---
+
+## 🤝 Human-in-the-Loop (HITL) Checkpoints
+
+Automated recommendations are only half the battle; real-world sustainability changes require human buy-in.
+- We integrated the **ADK 2.0 `request_input` interface** in the Orchestrator. 
+- After the Analyst computes the footprint and the Advisor proposes swaps, the Orchestrator halts execution and requests user feedback: *"Do you approve this sustainability action plan or have any updates?"*
+- In our frontend, this translates into interactive **Approve** and **Revise** action items. The user remains in control, authorizing offsets or rewriting input to re-run calculations seamlessly.
+
+---
+
+## 💡 Core Concepts Used
+
+- **Agentic Workflow Graphs**: Modeling LLM steps as software nodes, managing loops, conditions, and custom routing logic.
+- **Model Context Protocol (MCP)**: Leveraging a decoupled protocol layer running on stdio, allowing agents to execute exact lookup commands without packing large databases inside their LLM context window.
+- **Session State Sharing**: Reading/writing shared session data between independent agents (`eco_orchestrator`, `footprint_analyst`, `green_advisor`) to construct a unified final action plan.
+
+---
+
 ## 🏗️ How we built it
 We constructed a modular, decoupled architecture using:
 *   **Google ADK 2.0 Workflow API**: Used to design a stateful multi-agent execution graph with state sharing and custom entry points.
